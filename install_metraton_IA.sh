@@ -34,9 +34,7 @@ echo "[*] Configurando banco de dados..."
 systemctl start mariadb
 systemctl enable mariadb
 
-# ... (início do script)
-
-# Configuração COMPLETA do banco, usuário e TODAS as 4 tabelas necessárias
+# Configuração COMPLETA e FINAL do banco de dados
 mysql -u root <<EOF
 CREATE DATABASE IF NOT EXISTS metatron;
 CREATE USER IF NOT EXISTS 'metatron'@'localhost' IDENTIFIED BY '123';
@@ -44,7 +42,7 @@ GRANT ALL PRIVILEGES ON metatron.* TO 'metatron'@'localhost';
 FLUSH PRIVILEGES;
 USE metatron;
 
--- 1. Registro Geral
+-- 1. Registro principal das sessões
 CREATE TABLE IF NOT EXISTS history (
     sl_no INT AUTO_INCREMENT PRIMARY KEY,
     target VARCHAR(255) NOT NULL,
@@ -54,7 +52,7 @@ CREATE TABLE IF NOT EXISTS history (
     ai_analysis LONGTEXT
 );
 
--- 2. Resumo da Análise
+-- 2. Sumário executivo da IA
 CREATE TABLE IF NOT EXISTS summary (
     sl_no INT PRIMARY KEY,
     raw_scan LONGTEXT,
@@ -64,7 +62,7 @@ CREATE TABLE IF NOT EXISTS summary (
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 3. Lista de Vulnerabilidades
+-- 3. Detalhes das vulnerabilidades
 CREATE TABLE IF NOT EXISTS vulnerabilities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
@@ -75,7 +73,7 @@ CREATE TABLE IF NOT EXISTS vulnerabilities (
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 4. Comandos de Correção (O que faltava agora)
+-- 4. Sugestões de comandos para correção
 CREATE TABLE IF NOT EXISTS fixes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
@@ -83,9 +81,17 @@ CREATE TABLE IF NOT EXISTS fixes (
     fix_commands TEXT,
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
-EOF
 
-# ... (resto do script)
+-- 5. Registro de exploits sugeridos/tentados
+CREATE TABLE IF NOT EXISTS exploits_attempted (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sl_no INT,
+    exploit_name VARCHAR(255),
+    status VARCHAR(50),
+    output TEXT,
+    FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
+);
+EOF
 
 # 3. Ambiente Python
 echo "[*] Configurando ambiente virtual..."
