@@ -35,6 +35,7 @@ systemctl start mariadb
 systemctl enable mariadb
 
 # Configuração COMPLETA e FINAL do banco de dados
+#
 mysql -u root <<EOF
 CREATE DATABASE IF NOT EXISTS metatron;
 CREATE USER IF NOT EXISTS 'metatron'@'localhost' IDENTIFIED BY '123';
@@ -42,7 +43,6 @@ GRANT ALL PRIVILEGES ON metatron.* TO 'metatron'@'localhost';
 FLUSH PRIVILEGES;
 USE metatron;
 
--- 1. Registro principal das sessões
 CREATE TABLE IF NOT EXISTS history (
     sl_no INT AUTO_INCREMENT PRIMARY KEY,
     target VARCHAR(255) NOT NULL,
@@ -52,17 +52,16 @@ CREATE TABLE IF NOT EXISTS history (
     ai_analysis LONGTEXT
 );
 
--- 2. Sumário executivo da IA
 CREATE TABLE IF NOT EXISTS summary (
     sl_no INT PRIMARY KEY,
     raw_scan LONGTEXT,
     ai_analysis LONGTEXT,
     risk_level VARCHAR(50),
     generated_at DATETIME,
+    extra_info TEXT, -- Garante que o índice [5] funcione
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 3. Detalhes das vulnerabilidades
 CREATE TABLE IF NOT EXISTS vulnerabilities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
@@ -73,7 +72,6 @@ CREATE TABLE IF NOT EXISTS vulnerabilities (
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 4. Sugestões de comandos para correção
 CREATE TABLE IF NOT EXISTS fixes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
@@ -82,7 +80,6 @@ CREATE TABLE IF NOT EXISTS fixes (
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 5. Registro de exploits sugeridos/tentados
 CREATE TABLE IF NOT EXISTS exploits_attempted (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
