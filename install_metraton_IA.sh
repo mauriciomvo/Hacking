@@ -34,7 +34,9 @@ echo "[*] Configurando banco de dados..."
 systemctl start mariadb
 systemctl enable mariadb
 
-# Configuração completa do banco, usuário e TODAS as tabelas
+# ... (início do script)
+
+# Configuração COMPLETA do banco, usuário e TODAS as 4 tabelas necessárias
 mysql -u root <<EOF
 CREATE DATABASE IF NOT EXISTS metatron;
 CREATE USER IF NOT EXISTS 'metatron'@'localhost' IDENTIFIED BY '123';
@@ -42,7 +44,7 @@ GRANT ALL PRIVILEGES ON metatron.* TO 'metatron'@'localhost';
 FLUSH PRIVILEGES;
 USE metatron;
 
--- 1. Tabela de Histórico
+-- 1. Registro Geral
 CREATE TABLE IF NOT EXISTS history (
     sl_no INT AUTO_INCREMENT PRIMARY KEY,
     target VARCHAR(255) NOT NULL,
@@ -52,7 +54,7 @@ CREATE TABLE IF NOT EXISTS history (
     ai_analysis LONGTEXT
 );
 
--- 2. Tabela de Sumário
+-- 2. Resumo da Análise
 CREATE TABLE IF NOT EXISTS summary (
     sl_no INT PRIMARY KEY,
     raw_scan LONGTEXT,
@@ -62,7 +64,7 @@ CREATE TABLE IF NOT EXISTS summary (
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
 
--- 3. Tabela de Vulnerabilidades (O que faltava agora)
+-- 3. Lista de Vulnerabilidades
 CREATE TABLE IF NOT EXISTS vulnerabilities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sl_no INT,
@@ -72,7 +74,18 @@ CREATE TABLE IF NOT EXISTS vulnerabilities (
     remediation TEXT,
     FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
 );
+
+-- 4. Comandos de Correção (O que faltava agora)
+CREATE TABLE IF NOT EXISTS fixes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sl_no INT,
+    vulnerability TEXT,
+    fix_commands TEXT,
+    FOREIGN KEY (sl_no) REFERENCES history(sl_no) ON DELETE CASCADE
+);
 EOF
+
+# ... (resto do script)
 
 # 3. Ambiente Python
 echo "[*] Configurando ambiente virtual..."
